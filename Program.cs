@@ -1,4 +1,5 @@
-﻿using SqlSugar;
+﻿using System.Text;
+using SqlSugar;
 public class Program
 {
     /// <summary>
@@ -79,10 +80,10 @@ public class Program
     {
         try
         {
-            string[] split = str.Split(new char[] { '/', ' ', '_', '.' });
+            string[] split = str.Split('_');
             if (split.Length >= 1)
             {
-                string newStr = "";
+                StringBuilder sb = new StringBuilder();
                 foreach (var item in split)
                 {
                     char[] chars = item.ToCharArray();
@@ -91,13 +92,14 @@ public class Program
                     {
                         chars[i] = char.ToLower(chars[i]);
                     }
-                    newStr += new string(chars);
+                    sb.Append(chars);
+                    
                 }
-                return newStr;
+                return sb.ToString();
             }
         }
         catch (Exception ex) {
-            var tt = ex.ToString();
+            Console.WriteLine($"ToPascal发生异常 {ex.Message}");
         }
         return str;
     }
