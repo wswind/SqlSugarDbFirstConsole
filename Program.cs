@@ -60,11 +60,11 @@ public class Program
 
         foreach (var item in db.DbMaintenance.GetTableInfoList())
         {
-            string entityName = item.Name.ToUpper(); /*实体名大写*/
+            string entityName = ToPascal(item.Name);
             db.MappingTables.Add(entityName, item.Name);
             foreach (var col in db.DbMaintenance.GetColumnInfosByTableName(item.Name))
             {
-                db.MappingColumns.Add(col.DbColumnName.ToUpper() /*类的属性大写*/, col.DbColumnName, entityName);
+                db.MappingColumns.Add(ToPascal(col.DbColumnName), col.DbColumnName, entityName);
             }
         }
         db.Aop.OnLogExecuting = (sql, pars) =>
@@ -73,6 +73,33 @@ public class Program
             Console.WriteLine(sql);
         };
         db.DbFirst.IsCreateAttribute().CreateClassFile(outputDir, @namespace);
+    }
+
+    public static string ToPascal(string str)
+    {
+        try
+        {
+            string[] split = str.Split(new char[] { '/', ' ', '_', '.' });
+            if (split.Length >= 1)
+            {
+                string newStr = "";
+                foreach (var item in split)
+                {
+                    char[] chars = item.ToCharArray();
+                    chars[0] = char.ToUpper(chars[0]);
+                    for (int i = 1; i < chars.Length; i++)
+                    {
+                        chars[i] = char.ToLower(chars[i]);
+                    }
+                    newStr += new string(chars);
+                }
+                return newStr;
+            }
+        }
+        catch (Exception ex) {
+            var tt = ex.ToString();
+        }
+        return str;
     }
 
     public static void PrintSplit()
