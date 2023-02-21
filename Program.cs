@@ -101,10 +101,41 @@ public class Program
     public static string FormatName(string str, DbType dbType)
     {
         if(dbType == DbType.SqlServer)
-            return str;
+        {
+            return str.Replace("_", "");
+        }
         return ToPascal(str);
-
     }
+
+    public static string FormatSq(string str)
+    {
+        try
+        {
+            string[] split = str.Split('_');
+            if (split.Length >= 1)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var item in split)
+                {
+                    char[] chars = item.ToCharArray();
+                    chars[0] = char.ToUpper(chars[0]);
+                    for (int i = 1; i < chars.Length; i++)
+                    {
+                        chars[i] = char.ToLower(chars[i]);
+                    }
+                    sb.Append(chars);
+
+                }
+                return sb.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ToPascal发生异常 {ex.Message}");
+        }
+        return str;
+    }
+
     public static string ToPascal(string str)
     {
         try
