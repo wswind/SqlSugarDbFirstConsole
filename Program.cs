@@ -9,6 +9,8 @@ public class Program
     /// <param name="args">数据库连接串 输出目录 命名空间</param>
     private static void Main(string[] args)
     {
+        // 数据库类型
+        string dbType = string.Empty;
         // 数据库连接串
         string connectionString = string.Empty;
         // 输出目录
@@ -24,26 +26,30 @@ public class Program
             {
                 Console.WriteLine("进入手动输入模式");
                 PrintSplit();
+                Console.WriteLine("请输入数据库类型(mysql/sqlserver)");
+                dbType = Console.ReadLine() ?? "";
                 Console.WriteLine("请输入数据库连接串");
                 connectionString = Console.ReadLine() ?? "";
                 Console.WriteLine("请输入输出目录");
                 outputDir = Console.ReadLine() ?? "";
                 Console.WriteLine("请输入命名空间");
                 @namespace = Console.ReadLine() ?? "";
-                PrintConfirm(connectionString, outputDir, @namespace);
+                PrintConfirm(dbType, connectionString, outputDir, @namespace);
                 confirmd = ReadConfirm();
             }
         }
-        else if(args.Length == 3)
+        else if(args.Length == 4)
         {
             Console.WriteLine("进入参数解析模式");
             PrintSplit();
 
-            connectionString = args[0];
-            outputDir = args[1];
-            @namespace = args[2];
+            int i = 0;
+            dbType = args[i++];
+            connectionString = args[i++];
+            outputDir = args[i++];
+            @namespace = args[i++];
 
-            PrintConfirm(connectionString, outputDir, @namespace);
+            PrintConfirm(dbType, connectionString, outputDir, @namespace);
             if (!ReadConfirm())
                 return;
         }
@@ -52,20 +58,36 @@ public class Program
             PrintHelp();
         }
 
+        if(dbType != "mysql" && dbType != "sqlserver")
+            Console.WriteLine("数据库类型不支持");
+
+        DbType sugarDbType = DbType.MySql;
+
+        switch(dbType)
+        {
+            case "mysql":
+                sugarDbType =DbType.MySql; break;
+            case "sqlserver":
+                sugarDbType =DbType.SqlServer; break;
+            default: 
+                Console.WriteLine("数据库类型不支持");
+                return;
+        }
+
         var db = new SqlSugarClient(new ConnectionConfig()
         {
             ConnectionString = connectionString,
-            DbType = DbType.MySql,
+            DbType = sugarDbType,
             IsAutoCloseConnection = true,
         });
 
         foreach (var item in db.DbMaintenance.GetTableInfoList())
         {
-            string entityName = ToPascal(item.Name);
+            string entityName = FormatName(item.Name, sugarDbType);
             db.MappingTables.Add(entityName, item.Name);
             foreach (var col in db.DbMaintenance.GetColumnInfosByTableName(item.Name))
             {
-                db.MappingColumns.Add(ToPascal(col.DbColumnName), col.DbColumnName, entityName);
+                db.MappingColumns.Add(FormatName(col.DbColumnName, sugarDbType), col.DbColumnName, entityName);
             }
         }
         db.Aop.OnLogExecuting = (sql, pars) =>
@@ -76,6 +98,13 @@ public class Program
         db.DbFirst.IsCreateAttribute().CreateClassFile(outputDir, @namespace);
     }
 
+    public static string FormatName(string str, DbType dbType)
+    {
+        if(dbType == DbType.SqlServer)
+            return str;
+        return ToPascal(str);
+
+    }
     public static string ToPascal(string str)
     {
         try
@@ -115,9 +144,9 @@ public class Program
         Console.WriteLine("\"Server=...;Database=...;User=...;Password=...;SSL Mode=None;\" \"D:/dir\" \"GroupOrder.Model.Models\"");
     }
 
-    public static void PrintConfirm(string connectionString, string outputDir, string @namespace)
+    public static void PrintConfirm(string dbType, string connectionString, string outputDir, string @namespace)
     {
-        Console.WriteLine($"输入内容确认:\n数据库连接串:{connectionString}\n输出目录:{outputDir}\n命名空间:{@namespace}\n");
+        Console.WriteLine($"输入内容确认:\n数据库类型:{dbType}\n数据库连接串:{connectionString}\n输出目录:{outputDir}\n命名空间:{@namespace}\n");
     }
 
     public static bool ReadConfirm()
