@@ -4,7 +4,7 @@ public class Program
 {
     /// <summary>
     /// SulSugar DbFirst
-    /// https://www.donet5.com/home/doc?masterId=1&typeId=1207
+    /// https://www.donet5.com/Home/Doc?typeId=1207
     /// </summary>
     /// <param name="args">数据库连接串 输出目录 命名空间</param>
     private static void Main(string[] args)
@@ -18,7 +18,7 @@ public class Program
         // 命名空间
         string @namespace = string.Empty;
 
-
+        // 解析输入参数
         if (args.Length == 0)
         {
             bool confirmd = false;
@@ -61,7 +61,7 @@ public class Program
         if(dbType != "mysql" && dbType != "sqlserver")
             Console.WriteLine("数据库类型不支持");
 
-        DbType sugarDbType = DbType.MySql;
+        DbType sugarDbType;
 
         switch(dbType)
         {
@@ -74,6 +74,7 @@ public class Program
                 return;
         }
 
+        // 创建数据库连接
         var db = new SqlSugarClient(new ConnectionConfig()
         {
             ConnectionString = connectionString,
@@ -81,6 +82,7 @@ public class Program
             IsAutoCloseConnection = true,
         });
 
+        // 格式化名称
         foreach (var item in db.DbMaintenance.GetTableInfoList())
         {
             string entityName = FormatName(item.Name, sugarDbType);
@@ -104,36 +106,14 @@ public class Program
         {
             return str.Replace("_", "");
         }
-        return ToPascal(str);
-    }
-
-    public static string FormatSq(string str)
-    {
-        try
+        else if(dbType == DbType.MySql)
         {
-            string[] split = str.Split('_');
-            if (split.Length >= 1)
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (var item in split)
-                {
-                    char[] chars = item.ToCharArray();
-                    chars[0] = char.ToUpper(chars[0]);
-                    for (int i = 1; i < chars.Length; i++)
-                    {
-                        chars[i] = char.ToLower(chars[i]);
-                    }
-                    sb.Append(chars);
-
-                }
-                return sb.ToString();
-            }
+            return ToPascal(str);    
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"ToPascal发生异常 {ex.Message}");
+            throw new InvalidOperationException();
         }
-        return str;
     }
 
     public static string ToPascal(string str)
@@ -143,10 +123,12 @@ public class Program
             string[] split = str.Split('_');
             if (split.Length >= 1)
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 foreach (var item in split)
                 {
                     char[] chars = item.ToCharArray();
+                    if(chars.Length == 0)
+                        continue;
                     chars[0] = char.ToUpper(chars[0]);
                     for (int i = 1; i < chars.Length; i++)
                     {
@@ -184,7 +166,7 @@ public class Program
     {
         Console.WriteLine("是否确认? (y/n)");
         var confirm = Console.ReadLine();
-        bool confirmd = (confirm == "y");
+        bool confirmd = confirm == "y";
         return confirmd;
     }
 }
