@@ -82,22 +82,26 @@ public class Program
             IsAutoCloseConnection = true,
         });
 
-        // 格式化名称
-        foreach (var item in db.DbMaintenance.GetTableInfoList())
-        {
-            string entityName = FormatName(item.Name, sugarDbType);
-            db.MappingTables.Add(entityName, item.Name);
-            foreach (var col in db.DbMaintenance.GetColumnInfosByTableName(item.Name))
-            {
-                db.MappingColumns.Add(FormatName(col.DbColumnName, sugarDbType), col.DbColumnName, entityName);
-            }
-        }
-        db.Aop.OnLogExecuting = (sql, pars) =>
-        {
-            // 输出sql,查看执行sql 性能无影响
-            Console.WriteLine(sql);
-        };
-        db.DbFirst.IsCreateAttribute().CreateClassFile(outputDir, @namespace);
+        // // 格式化名称
+        // foreach (var item in db.DbMaintenance.GetTableInfoList())
+        // {
+        //     string entityName = FormatName(item.Name, sugarDbType);
+        //     db.MappingTables.Add(entityName, item.Name);
+        //     foreach (var col in db.DbMaintenance.GetColumnInfosByTableName(item.Name))
+        //     {
+        //         db.MappingColumns.Add(FormatName(col.DbColumnName, sugarDbType), col.DbColumnName, entityName);
+        //     }
+        // }
+        // db.Aop.OnLogExecuting = (sql, pars) =>
+        // {
+        //     // 输出sql,查看执行sql 性能无影响
+        //     Console.WriteLine(sql);
+        // };
+        db.DbFirst.IsCreateAttribute()
+                  .FormatFileName(it => FormatName(it, sugarDbType))
+                  .FormatClassName(it => FormatName(it, sugarDbType))
+                  .FormatPropertyName(it => FormatName(it, sugarDbType))
+                  .CreateClassFile(outputDir, @namespace);
     }
 
     public static string FormatName(string str, DbType dbType)
@@ -135,7 +139,6 @@ public class Program
                         chars[i] = char.ToLower(chars[i]);
                     }
                     sb.Append(chars);
-                    
                 }
                 return sb.ToString();
             }
